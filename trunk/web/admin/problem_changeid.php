@@ -1,6 +1,6 @@
 <?php require("admin-header.php");
 
-if (!(isset($_SESSION['administrator']))){
+if (!(isset($_SESSION[$OJ_NAME.'_'.'administrator']))){
 	echo "<a href='../loginpage.php'>Please Login First!</a>";
 	exit(1);
 }
@@ -19,39 +19,31 @@ function writable($path){
 		$from=intval($_POST['from']);
 		$to=intval($_POST['to']);
 		$row=0;
-		if($result=mysql_query("select 1 from problem where problem_id=$to")){
-			$row=mysql_num_rows($result);
-			mysql_free_result($result);
+		if($result=pdo_query("select 1 from problem where problem_id=?",$to)){
+			$row=count($result);
+			
 		}
 		
 		if($row==0&&rename("$OJ_DATA/$from","$OJ_DATA/$to")){
-			$sql="UPDATE `problem` SET `problem_id`=$to WHERE `problem_id`=".$from;
-			if(!mysql_query($sql)){
+			$sql="UPDATE `problem` SET `problem_id`=? WHERE `problem_id`=?";
+			if(pdo_query($sql,$to,$from)==0){
 				 rename("$OJ_DATA/$to","$OJ_DATA/$from");
+				 echo "fail...";
 				 exit(1);
 			}
-			$sql="UPDATE `solution` SET `problem_id`=$to WHERE `problem_id`=".$from;
-			if(!mysql_query($sql)){
-				 rename("$OJ_DATA/$to","$OJ_DATA/$from");
-				 exit(1);
-			}
-			$sql="UPDATE `contest_problem` SET `problem_id`=$to WHERE `problem_id`=".$from;
-			if(!mysql_query($sql)){
-				 rename("$OJ_DATA/$to","$OJ_DATA/$from");
-				 exit(1);
-			}
-			$sql="UPDATE `topic` SET `pid`=$to WHERE `pid`=".$from;
-			if(!mysql_query($sql)){
-				 rename("$OJ_DATA/$to","$OJ_DATA/$from");
-				 exit(1);
-			}
+			$sql="UPDATE `solution` SET `problem_id`=? WHERE `problem_id`=?";
+			pdo_query($sql,$to,$from);
+			$sql="UPDATE `contest_problem` SET `problem_id`=? WHERE `problem_id`=?";
+			pdo_query($sql,$to,$from);
+			$sql="UPDATE `topic` SET `pid`=? WHERE `pid`=?";
+			pdo_query($sql,$to,$from);
+			
 			$sql="select max(problem_id) from problem";
-			if($result=mysql_query($sql)){
-				$f=mysql_fetch_array($result);
+			if($result=pdo_query($sql)){
+				$f=$result[0];
 				$nextid=$f[0]+1;
-				mysql_free_result($result);
-				$sql="ALTER TABLE problem AUTO_INCREMENT = $nextid";
-				mysql_query($sql);
+				$sql="ALTER TABLE problem AUTO_INCREMENT = ?";
+				pdo_query($sql,$nextid);
 			}
 			
 			echo "done!";

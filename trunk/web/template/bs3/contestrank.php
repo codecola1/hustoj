@@ -32,13 +32,16 @@ $rank=1;
 <a href="contestrank.xls.php?cid=<?php echo $cid?>" >Download</a>
 <?php
 if($OJ_MEMCACHE){
-  ?>
-<a href="contestrank2.php?cid=<?php echo $cid?>" >Replay</a>
-
-<?php
+    if (isset($_SESSION[$OJ_NAME.'_'.'administrator'])) {
+        echo ' | <a href="contestrank3.php?cid='.$cid.'">滚榜</a>';
+    }
+    if($OJ_MEMCACHE){
+        echo '<a href="contestrank2.php?cid='.$cid.'">Replay</a>';
+    }
 }
  ?>
 </center>
+<div style="overflow: auto">
 <table id=rank><thead><tr class=toprow align=center><td class="{sorter:'false'}" width=5%>Rank<th width=10%>User</th><th width=10%>Nick</th><th width=5%>Solved</th><th width=5%>Penalty</th>
 <?php
 for ($i=0;$i<$pid_cnt;$i++)
@@ -90,6 +93,7 @@ echo "</tr>\n";
 }
 echo "</tbody></table>";
 ?>
+</div>
       </div>
 
     </div> <!-- /container -->
@@ -103,37 +107,38 @@ echo "</tbody></table>";
 <script type="text/javascript">
 $(document).ready(function()
 {
-$.tablesorter.addParser({
-// set a unique id
-id: 'punish',
-is: function(s) {
-// return false so this parser is not auto detected
-return false;
-},
-format: function(s) {
-// format your data for normalization
-var v=s.toLowerCase().replace(/\:/,'').replace(/\:/,'').replace(/\(-/,'.').replace(/\)/,'');
-//alert(v);
-v=parseFloat('0'+v);
-return v>1?v:v+Number.MAX_VALUE-1;
-},
-// set type, either numeric or text
-type: 'numeric'
-});
-$("#rank").tablesorter({
-headers: {
-4: {
-sorter:'punish'
-}
-<?php
-for ($i=0;$i<$pid_cnt;$i++){
-echo ",".($i+5).": { ";
-echo " sorter:'punish' ";
-echo "}";
-}
-?>
-}
-});
+        $.tablesorter.addParser({
+              // set a unique id
+              id: 'punish',
+              is: function(s) {
+              // return false so this parser is not auto detected
+              return false;
+              },
+              format: function(s) {
+              // format your data for normalization
+              var v=s.toLowerCase().replace(/\:/,'').replace(/\:/,'').replace(/\(-/,'.').replace(/\)/,'');
+              //alert(v);
+              v=parseFloat('0'+v);
+              return v>1?v:v+Number.MAX_VALUE-1;
+              },
+              // set type, either numeric or text
+              type: 'numeric'
+              });
+              $("#rank").tablesorter({
+              headers: {
+              4: {
+              sorter:'punish'
+              }
+              <?php
+              for ($i=0;$i<$pid_cnt;$i++){
+              echo ",".($i+5).": { ";
+              echo " sorter:'punish' ";
+              echo "}";
+              }
+              ?>
+              }
+        });
+  metal();
 }
 );
 </script>
@@ -181,7 +186,7 @@ cell.className="badge badge-info";
 //alert(e);
 }
 }
-metal();
+
 </script>
 <style>
 .well{

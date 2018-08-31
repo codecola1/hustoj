@@ -47,18 +47,24 @@ if(array_key_exists('code',$_GET)){
         $email = $user->screen_name."@weibo.com";
         $school = "";
         // check first
-        $sql = "SELECT `user_id` FROM `users` where `user_id`='$uname'";
-        $res = mysql_query($sql);
-        $row_num = mysql_num_rows($res);
+        $sql = "SELECT `user_id` FROM `users` where `user_id`=?";
+        $res = pdo_query($sql,$uname);
+        $row_num = count($res);
         if ($row_num == 0){
             $sql="INSERT INTO `users`("
                     ."`user_id`,`email`,`ip`,`accesstime`,`password`,`reg_time`,`nick`,`school`)"
-            ."VALUES('".$uname."','".$email."','".$_SERVER['REMOTE_ADDR']."',NOW(),'".$password."',NOW(),'".$nick."','".$school."')";
+            ."VALUES(?,?,?,NOW(),?,NOW(),?,?)";
            // reg it
-           mysql_query($sql);
+            $ip = ($_SERVER['REMOTE_ADDR']);
+            if( !empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ){
+                $REMOTE_ADDR = $_SERVER['HTTP_X_FORWARDED_FOR'];
+                $tmp_ip=explode(',',$REMOTE_ADDR);
+                $ip =(htmlentities($tmp_ip[0],ENT_QUOTES,"UTF-8"));
+            }
+            pdo_query($sql,$uname,$email,$ip,$password,$nick,$school);
         }
         // login it
-		$_SESSION['user_id']=$uname;
+		$_SESSION[$OJ_NAME.'_'.'user_id']=$uname;
         // redirect it
         header("Location: ./");
     }else{

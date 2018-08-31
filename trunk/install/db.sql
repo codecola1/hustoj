@@ -3,7 +3,7 @@ create database jol;
 use jol;
 
 CREATE TABLE  `compileinfo` (
-  `solution_id` int(11) NOT NULL DEFAULT '0',
+  `solution_id` int(11) NOT NULL DEFAULT 0,
   `error` text,
   PRIMARY KEY (`solution_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -22,18 +22,18 @@ CREATE TABLE  `contest` (
   PRIMARY KEY (`contest_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1000 DEFAULT CHARSET=utf8;
 
-CREATE TABLE  `contest_problem` (
+CREATE TABLE IF NOT EXISTS `contest_problem` (
   `problem_id` int(11) NOT NULL DEFAULT '0',
   `contest_id` int(11) DEFAULT NULL,
   `title` char(200) NOT NULL DEFAULT '',
-  `num` int(11) NOT NULL DEFAULT '0'
+  `num` int(11) NOT NULL DEFAULT '0',
+  KEY `cni` (`contest_id`,`num`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
 
 CREATE TABLE `loginlog` (
   `user_id` varchar(48) NOT NULL DEFAULT '',
   `password` varchar(40) DEFAULT NULL,
-  `ip` varchar(100) DEFAULT NULL,
+  `ip` varchar(46) DEFAULT NULL,
   `time` datetime DEFAULT NULL,
   KEY `user_log_index` (`user_id`,`time`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -57,7 +57,7 @@ CREATE TABLE  `news` (
   `user_id` varchar(48) NOT NULL DEFAULT '',
   `title` varchar(200) NOT NULL DEFAULT '',
   `content` text NOT NULL,
-  `time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `time` datetime NOT NULL DEFAULT '2016-05-13 19:24:00',
   `importance` tinyint(4) NOT NULL DEFAULT '0',
   `defunct` char(1) NOT NULL DEFAULT 'N',
   PRIMARY KEY (`news_id`)
@@ -82,8 +82,8 @@ CREATE TABLE  `problem` (
   `hint` text,
   `source` varchar(100) DEFAULT NULL,
   `in_date` datetime DEFAULT NULL,
-  `time_limit` int(11) NOT NULL DEFAULT '0',
-  `memory_limit` int(11) NOT NULL DEFAULT '0',
+  `time_limit` int(11) NOT NULL DEFAULT 0,
+  `memory_limit` int(11) NOT NULL DEFAULT 0,
   `defunct` char(1) NOT NULL DEFAULT 'N',
   `accepted` int(11) DEFAULT '0',
   `submit` int(11) DEFAULT '0',
@@ -94,11 +94,11 @@ CREATE TABLE  `problem` (
 CREATE TABLE  `reply` (
   `rid` int(11) NOT NULL AUTO_INCREMENT,
   `author_id` varchar(48) NOT NULL,
-  `time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `time` datetime NOT NULL DEFAULT '2016-05-13 19:24:00',
   `content` text NOT NULL,
   `topic_id` int(11) NOT NULL,
   `status` int(2) NOT NULL DEFAULT '0',
-  `ip` varchar(30) NOT NULL,
+  `ip` varchar(46) NOT NULL,
   PRIMARY KEY (`rid`),
   KEY `author_id` (`author_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -114,27 +114,28 @@ CREATE TABLE  `sim` (
 
 CREATE TABLE  `solution` (
   `solution_id` int(11) NOT NULL AUTO_INCREMENT,
-  `problem_id` int(11) NOT NULL DEFAULT '0',
+  `problem_id` int(11) NOT NULL DEFAULT 0,
   `user_id` char(48) NOT NULL,
-  `time` int(11) NOT NULL DEFAULT '0',
-  `memory` int(11) NOT NULL DEFAULT '0',
-  `in_date` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `time` int(11) NOT NULL DEFAULT 0,
+  `memory` int(11) NOT NULL DEFAULT 0,
+  `in_date` datetime NOT NULL DEFAULT '2016-05-13 19:24:00',
   `result` smallint(6) NOT NULL DEFAULT '0',
   `language` INT UNSIGNED NOT NULL DEFAULT '0',
-  `ip` char(15) NOT NULL,
+  `ip` char(46) NOT NULL,
   `contest_id` int(11) DEFAULT NULL,
   `valid` tinyint(4) NOT NULL DEFAULT '1',
   `num` tinyint(4) NOT NULL DEFAULT '-1',
-  `code_length` int(11) NOT NULL DEFAULT '0',
+  `code_length` int(11) NOT NULL DEFAULT 0,
   `judgetime` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `pass_rate` DECIMAL(2,2) UNSIGNED NOT NULL DEFAULT 0,
+  `pass_rate` DECIMAL(3,2) UNSIGNED NOT NULL DEFAULT 0,
   `lint_error` int UNSIGNED NOT NULL DEFAULT 0,
+  `judger` CHAR(16) NOT NULL DEFAULT 'LOCAL',
   PRIMARY KEY (`solution_id`),
   KEY `uid` (`user_id`),
   KEY `pid` (`problem_id`),
   KEY `res` (`result`),
   KEY `cid` (`contest_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=1001 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM row_format=fixed AUTO_INCREMENT=1001 DEFAULT CHARSET=utf8;
 
 CREATE TABLE  `source_code` (
   `solution_id` int(11) NOT NULL,
@@ -161,20 +162,20 @@ CREATE TABLE  `users` (
   `submit` int(11) DEFAULT '0',
   `solved` int(11) DEFAULT '0',
   `defunct` char(1) NOT NULL DEFAULT 'N',
-  `ip` varchar(20) NOT NULL DEFAULT '',
+  `ip` varchar(46) NOT NULL DEFAULT '',
   `accesstime` datetime DEFAULT NULL,
   `volume` int(11) NOT NULL DEFAULT '1',
   `language` int(11) NOT NULL DEFAULT '1',
   `password` varchar(32) DEFAULT NULL,
   `reg_time` datetime DEFAULT NULL,
-  `nick` varchar(100) NOT NULL DEFAULT '',
-  `school` varchar(100) NOT NULL DEFAULT '',
+  `nick` varchar(20) NOT NULL DEFAULT '',
+  `school` varchar(20) NOT NULL DEFAULT '',
   PRIMARY KEY (`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE `online` (
   `hash` varchar(32) collate utf8_unicode_ci NOT NULL,
-  `ip` varchar(20) character set utf8 NOT NULL default '',
+  `ip` varchar(46) character set utf8 NOT NULL default '',
   `ua` varchar(255) character set utf8 NOT NULL default '',
   `refer` varchar(255) collate utf8_unicode_ci default NULL,
   `lastmove` int(10) NOT NULL,
@@ -185,14 +186,51 @@ CREATE TABLE `online` (
 ) ENGINE=MEMORY DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 CREATE TABLE  `runtimeinfo` (
-  `solution_id` int(11) NOT NULL DEFAULT '0',
+  `solution_id` int(11) NOT NULL DEFAULT 0,
   `error` text,
   PRIMARY KEY (`solution_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE  `custominput` (
-  `solution_id` int(11) NOT NULL DEFAULT '0',
+  `solution_id` int(11) NOT NULL DEFAULT 0,
   `input_text` text,
   PRIMARY KEY (`solution_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE  `printer` (
+  `printer_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` char(48) NOT NULL,
+  `in_date` datetime NOT NULL DEFAULT '2018-03-13 19:38:00',
+  `status` smallint(6) NOT NULL DEFAULT '0',
+  `worktime` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `printer` CHAR(16) NOT NULL DEFAULT 'LOCAL',
+  `content` text NOT NULL ,
+  PRIMARY KEY (`printer_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE TABLE  `balloon` (
+  `balloon_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` char(48) NOT NULL,
+  `sid` int(11) NOT NULL ,
+  `cid` int(11) NOT NULL ,
+  `pid` int(11) NOT NULL ,
+  `status` smallint(6) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`balloon_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+delimiter //
+drop trigger if exists simfilter//
+create trigger simfilter
+before insert on sim
+for each row
+begin
+ declare new_user_id varchar(64);
+ declare old_user_id varchar(64);
+ select user_id from solution where solution_id=new.s_id into new_user_id;
+ select user_id from solution where solution_id=new.sim_s_id into old_user_id;
+ if old_user_id=new_user_id then
+	set new.s_id=0;
+ end if;
+ 
+end;//
+delimiter ;

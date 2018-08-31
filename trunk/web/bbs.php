@@ -1,21 +1,35 @@
 <?php require_once("./include/db_info.inc.php");
 /* 
 */
+if(isset($OJ_EXAM_CONTEST_ID)&&$OJ_EXAM_CONTEST_ID>0){
+	header("Content-type: text/html; charset=utf-8");
+	echo $MSG_BBS_NOT_ALLOWED_FOR_EXAM;
+	exit ();
 
-if(isset($_GET['pid']))
+}
+$parm="";
+
+if(isset($_GET['pid'])){
 	$pid=intval($_GET['pid']);
-else
-	$pid=0;
-if(isset($_GET['cid']))
-	$cid=intval($_GET['cid']);
-else
-	$cid=0;
-if($OJ_BBS=="discuss"){
-  echo ("<script>location.href='discuss/discuss.php?".$_SERVER["QUERY_STRING"]."';</script>");
-}else if ($OJ_BBS=="discuss3"){
-   echo ("<script>location.href='discuss3/discuss.php?".$_SERVER["QUERY_STRING"]."';</script>");
+	$parm="pid=".$pid;
 }else{
-	$url="";
+	$pid=0;
+}
+if(isset($_GET['cid'])){
+	$cid=intval($_GET['cid']);
+	$parm.="&cid=".$cid;
+}else{
+	$cid=0;
+}
+
+
+
+if($OJ_BBS=="discuss"){
+  echo ("<script>location.href='discuss/discuss.php?".$parm."';</script>");
+}else if ($OJ_BBS=="discuss3"){
+   echo ("<script>location.href='discuss3/discuss.php?".$parm."';</script>");
+}else{
+	
 	if(isset($_GET['pid'])){
 	    $url=("bbs/search.php?fid[]=2&keywords=".$pid); //chenge this to your own phpBB search link
 	}else{

@@ -6,18 +6,18 @@
 </head>
 <body>
 <div id="wrapper">
-	<?php require_once("oj-header.php");?>
+	<?php require_once("template/bs/oj-header.php");?>
 <div id=main>
 	<form action="modify.php" method="post">
 	<br><br>
 	<center><table>
 		<tr><td colspan=2 height=40 width=500>&nbsp;&nbsp;&nbsp;Update Information</tr>
 		<tr><td width=25%>User ID:
-			<td width=75%><?php echo $_SESSION['user_id']?>
+			<td width=75%><?php echo $_SESSION[$OJ_NAME.'_'.'user_id']?>
 			<?php require_once('./include/set_post_key.php');?>
 		</tr>
 		<tr><td>Nick Name:
-			<td><input name="nick" size=50 type=text value="<?php echo htmlspecialchars($row->nick)?>" >
+			<td><input name="nick" size=50 type=text value="<?php echo htmlentities($row['nick'],ENT_QUOTES,"UTF-8")?>" >
 		</tr>
 		<tr><td>Old Password:
 			<td><input name="opassword" size=20 type=password>
@@ -29,10 +29,10 @@
 			<td><input name="rptpassword" size=20 type=password>
 		</tr>
 		<tr><td>School:
-			<td><input name="school" size=30 type=text value="<?php echo htmlspecialchars($row->school)?>" >
+			<td><input name="school" size=30 type=text value="<?php echo htmlentities($row['school'],ENT_QUOTES,"UTF-8")?>" >
 		</tr>
 		<tr><td>Email:
-			<td><input name="email" size=30 type=text value="<?php echo htmlspecialchars($row->email)?>" >
+			<td><input name="email" size=30 type=text value="<?php echo htmlentities($row['email'],ENT_QUOTES,"UTF-8")?>" >
 		</tr>
 		<tr><td>
 			<td><input value="Submit" name="submit" type="submit">
@@ -44,7 +44,7 @@
 	<a href=export_ac_code.php>Download All AC Source</a>
 	<br>
 <div id=foot>
-	<?php require_once("oj-footer.php");?>
+	<?php require_once("template/bs/oj-footer.php");?>
 
 </div><!--end foot-->
 </div><!--end main-->

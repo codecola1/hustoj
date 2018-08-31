@@ -12,20 +12,20 @@
 		$discuz_conn=mysql_connect($discuz_host.":".$discuz_port,$discuz_user,$discuz_pass);
 
 		$ret=false;
-		mysql_query("set names utf8");
+		pdo_query("set names utf8");
 		$sql="select password,salt,username from ".$discuz_db.".uc_members where username='$user_id'";
-		$result=mysql_query($sql);
-		$row = mysql_fetch_array($result);
+		$result=pdo_query($sql);
+		$row = $result[0];
 		if($discuz_conn){
 			mysql_select_db($discuz_db,$discuz_conn);
-			$result=mysql_query($sql,$discuz_conn);
+			$result=pdo_query($sql,$discuz_conn);
 		
 			if($row['password']==md5(md5($password).$row['salt'])){
 
-					$_SESSION['user_id']=$row['username'];
-					$ret=$_SESSION['user_id'];
-				//	$sql="insert into jol.users(user_id,ip,nick,school) values('".$_SESSION['user_id']."','','','') on DUPLICATE KEY UPDATE nick='".$row['username']."'";
-				//	mysql_query($sql);
+					$_SESSION[$OJ_NAME.'_'.'user_id']=$row['username'];
+					$ret=$_SESSION[$OJ_NAME.'_'.'user_id'];
+				//	$sql="insert into jol.users(user_id,ip,nick,school) values('".$_SESSION[$OJ_NAME.'_'.'user_id']."','','','') on DUPLICATE KEY UPDATE nick='".$row['username']."'";
+				//	pdo_query($sql);
 					
 			}
 

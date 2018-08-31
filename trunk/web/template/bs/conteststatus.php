@@ -16,11 +16,11 @@
 <?php 
 ?>
 <form id=simform action="status.php" method="get">
-<?php echo $MSG_PROBLEM_ID?>:<input class="input-small" style="height:24px" type=text size=4 name=problem_id value='<?php echo $problem_id?>'>
-<?php echo $MSG_USER?>:<input  class="input-mini" style="height:24px" type=text size=4 name=user_id value='<?php echo $user_id?>'>
+<?php echo $MSG_PROBLEM_ID?>:<input class="input-small" style="height:24px" type=text size=4 name=problem_id value='<?php echo htmlentities($problem_id,ENT_QUOTES,'UTF-8')?>'>
+<?php echo $MSG_USER?>:<input  class="input-mini" style="height:24px" type=text size=4 name=user_id value='<?php echo  htmlentities($user_id,ENT_QUOTES,'UTF-8')?>'>
 <?php if (isset($cid)) echo "<input type='hidden' name='cid' value='$cid'>";?>
 <?php echo $MSG_LANG?>:<select  class="input-small"  size="1" name="language">
-<?php if (isset($_GET['language'])) $language=$_GET['language'];
+<?php if (isset($_GET['language'])) $language=intval($_GET['language']);
 else $language=-1;
 if ($language<0||$language>9) $language=-1;
 if ($language==-1) echo "<option value='-1' selected>All</option>";
@@ -50,7 +50,7 @@ echo "</select>";
 ?>
 </select>
 
-<?php if(isset($_SESSION['administrator'])||isset($_SESSION['source_browser'])){
+<?php if(isset($_SESSION[$OJ_NAME.'_'.'administrator'])||isset($_SESSION[$OJ_NAME.'_'.'source_browser'])){
         if(isset($_GET['showsim']))
                 $showsim=intval($_GET['showsim']);
         else
@@ -122,7 +122,7 @@ echo "<input class=btn type=submit value='$MSG_SEARCH' /></form>";
 <div id=center>
 <?php echo "[<a href=status.php?".$str2.">Top</a>]&nbsp;&nbsp;";
 if (isset($_GET['prevtop']))
-        echo "[<a href=status.php?".$str2."&top=".$_GET['prevtop'].">Previous Page</a>]&nbsp;&nbsp;";
+        echo "[<a href=status.php?".$str2."&top=".intval($_GET['prevtop']).">Previous Page</a>]&nbsp;&nbsp;";
 else
         echo "[<a href=status.php?".$str2."&top=".($top+20).">Previous Page</a>]&nbsp;&nbsp;";
 echo "[<a href=status.php?".$str2."&top=".$bottom."&prevtop=$top>Next Page</a>]";
@@ -132,7 +132,7 @@ echo "[<a href=status.php?".$str2."&top=".$bottom."&prevtop=$top>Next Page</a>]"
 
 
 <div id=foot>
-	<?php require_once("oj-footer.php");?>
+	<?php require_once("template/bs/oj-footer.php");?>
 
 </div><!--end foot-->
 </div><!--end main-->
@@ -193,7 +193,7 @@ xmlhttp.onreadystatechange=function()
 xmlhttp.open("GET","status-ajax.php?solution_id="+solution_id,true);
 xmlhttp.send();
 }
-<?php if ($last>0&&$_SESSION['user_id']==$_GET['user_id']) echo "fresh_result($last);";?>
+<?php if ($last>0&&$_SESSION[$OJ_NAME.'_'.'user_id']==$_GET['user_id']) echo "fresh_result($last);";?>
 </script>
 
 </body>

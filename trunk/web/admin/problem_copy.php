@@ -1,12 +1,33 @@
 <?php require_once ("admin-header.php");
-if (!(isset($_SESSION['administrator']))){
+if (!(isset($_SESSION[$OJ_NAME.'_'.'administrator']))){
 	echo "<a href='../loginpage.php'>Please Login First!</a>";
 	exit(1);
 }
 ?>
 <ol>
 <li>
-Copy from http://plg1.cs.uwaterloo.ca/~acm00/
+Copy from http://hustoj......
+<form method=POST action=problem_add_page_hustoj.php>
+  <input name=url type=text size=100>
+  <input type=submit>
+</form>
+</li>
+<li>
+Copy from https://www.luogu.org/problemnew/show/
+<form method=POST action=problem_add_page_luogu.php>
+  <input name=url type=text size=100>
+  <input type=submit>
+</form>
+</li>
+<li>
+Copy from https://loj.ac/problem/
+<form method=POST action=problem_add_page_loj.php>
+  <input name=url type=text size=100>
+  <input type=submit>
+</form>
+</li>
+<li>
+Copy from http://acm.student.cs.uwaterloo.ca/~acm00
 <form method=POST action=problem_add_page_waterloo.php>
   <input name=url type=text size=100>
   <input type=submit>

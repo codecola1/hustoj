@@ -9,7 +9,7 @@
 	
 <script type="text/javascript" src="include/wz_jsgraphics.js"></script>
 <script type="text/javascript" src="include/pie.js"></script>
-<script language="javascript" type="text/javascript" src="include/jquery-latest.js"></script>
+
     <script language="javascript" type="text/javascript" src="include/jquery.flot.js"></script>
     <script type="text/javascript">
 $(function () {
@@ -54,7 +54,7 @@ $(function () {
 <center>
 <table class="table table-striped" id=statics width=90%>
 <caption>
-<?php echo $user."--".htmlspecialchars($nick)?>
+<?php echo $user."--".htmlentities($nick,ENT_QUOTES,"UTF-8")?>
 <?php
 	echo "<a href=mail.php?to_user=$user>$MSG_MAIL</a>";
 ?>
@@ -64,11 +64,11 @@ $(function () {
 <td rowspan=14 align=center>
 <script language='javascript'>
 function p(id){document.write("<a href=problem.php?id="+id+">"+id+" </a>");}
-<?php $sql="SELECT DISTINCT `problem_id` FROM `solution` WHERE `user_id`='$user_mysql' AND `result`=4 ORDER BY `problem_id` ASC";	
-if (!($result=mysql_query($sql))) echo mysql_error();
-while ($row=mysql_fetch_array($result))
+<?php $sql="SELECT DISTINCT `problem_id` FROM `solution` WHERE `user_id`=? AND `result`=4 ORDER BY `problem_id` ASC";	
+if ($result=pdo_query($sql,$user)){
+ foreach($result as $row)
 	echo "p($row[0]);";
-mysql_free_result($result);
+}
 ?>
 </script>
 <div id=submission style="width:600px;height:300px" ></div>
@@ -115,7 +115,7 @@ echo "<tr id=pie bgcolor=#D7EBFF><td>Statistics<td><div id='PieDiv' style='posit
 <tr bgcolor=#D7EBFF><td>Email:<td align=center><?php echo $email?></tr>
 </table>
 <?php
- if(isset($_SESSION['administrator'])){
+ if(isset($_SESSION[$OJ_NAME.'_'.'administrator'])){
 
 	 ?><table border=1><tr class=toprow><td>UserID<td>Password<td>IP<td>Time</tr>
 	 <tbody>

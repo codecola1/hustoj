@@ -1,7 +1,7 @@
 <?php
         session_start();
-        require_once("../include/db_info.inc.php");
-        if (!isset($_SESSION['user_id'])){
+        require_once("oj-header.php");
+        if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])){
                 require_once("oj-header.php");
                 echo "<a href=loginpage.php>Please Login First</a>";
                 require_once("../oj-footer.php");
@@ -26,44 +26,63 @@
         if ($_REQUEST['action']=='new'){
                 if (array_key_exists('title',$_POST) && array_key_exists('content', $_POST) && $_POST['title']!='' && $_POST['content']!=''){
                         if(array_key_exists('pid',$_REQUEST)&&$_REQUEST['pid']!='')
-                                $pid=$_REQUEST['pid'];
+                                $pid=intval($_REQUEST['pid']);
                         else
                                 $pid=0;
                         if(array_key_exists('cid',$_REQUEST)&&$_REQUEST['cid']!='')
-                                $cid="'".mysql_real_escape_string($_REQUEST['cid'])."'";
+                                $cid=intval($_REQUEST['cid']);
                         else
-                                $cid='NULL';
-                        $sql="INSERT INTO `topic` (`title`, `author_id`, `cid`, `pid`) SELECT '".mysql_real_escape_string($_POST['title'])."', '".mysql_real_escape_string($_SESSION['user_id'])."', $cid, '".mysql_real_escape_string($pid)."'";
-                        if($pid!=0)
-                                if($cid!='NULL')
-                                        $sql.=" FROM `contest_problem` WHERE `contest_id` = $cid AND `problem_id` = '".mysql_real_escape_string($pid)."'";
-                                else
-                                        $sql.=" FROM `problem` WHERE `problem_id` = '".mysql_real_escape_string($pid)."'";
-                        else if($cid!='NULL')
-                                $sql.=" FROM `contest` WHERE `contest_id` = $cid";
-                        $sql.=" LIMIT 1";
-                        mysql_query($sql) or die (mysql_error());
-                        if(mysql_affected_rows()<=0)
-                                echo('Unable to post.');
-                        else
-                                $tid=mysql_insert_id();
+                                $cid=0;
+			if($pid==0){
+				  if($cid>0){
+			                $problem_id=htmlentities($_POST['pid'],ENT_QUOTES,'UTF-8');
+//					echo "problem_id:".$problem_id;
+               				$num=strpos($PID,$problem_id);
+//					echo "num:$num";
+					$pid=pdo_query("select problem_id from contest_problem where contest_id=? and num=?",$cid,$num)[0][0];
+//					echo "pid:$pid";
+				  }
+
+			}
+                        $sql="INSERT INTO `topic` (`title`, `author_id`, `cid`, `pid`) values(?,?,?,?)";
+						//echo $sql;
+                        $rows=pdo_query($sql,$_POST['title'],$_SESSION[$OJ_NAME.'_'.'user_id'],$cid,$pid);
+                        if(!$rows){
+				//echo $sql;
+                                echo('Unable to post new.');
+                        }else{
+                                $tid=$rows;
+			}
                 }
                 else
                         echo('Error!');
         }
         if ($_REQUEST['action']=='reply' || !is_null($tid)){
-                if(is_null($tid)) $tid=$_POST['tid'];
+                if(is_null($tid)) $tid=intval($_POST['tid']);
                 if (!is_null($tid) && array_key_exists('content', $_POST) && $_POST['content']!=''){
-                        $sql="INSERT INTO `reply` (`author_id`, `time`, `content`, `topic_id`,`ip`) SELECT '".mysql_real_escape_string($_SESSION['user_id'])."', NOW(), '".mysql_real_escape_string($_POST['content'])."', '".mysql_real_escape_string($tid)."','".$_SERVER['REMOTE_ADDR']."' FROM `topic` WHERE `tid` = '".mysql_real_escape_string($tid)."' AND `status` = 0 ";
-                        
-                        mysql_query($sql) or die (mysql_error());
-                        if(mysql_affected_rows()>0)
-                        {
-                                header('Location: thread.php?tid='.$tid);
-                                exit(0);
-                        }
-                        else
-                                echo('Unable to post.');
+			$rows=pdo_query("select tid from topic where tid=?",$tid);
+			if(isset($rows[0])){
+				$ip = ($_SERVER['REMOTE_ADDR']);
+				if( !empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ){
+				    $REMOTE_ADDR = $_SERVER['HTTP_X_FORWARDED_FOR'];
+				    $tmp_ip=explode(',',$REMOTE_ADDR);
+				    $ip =(htmlentities($tmp_ip[0],ENT_QUOTES,"UTF-8"));
+				}
+				$sql="insert INTO `reply` (`author_id`, `time`, `content`, `topic_id`,`ip`) values(?,NOW(),?,?,?)";
+				if(pdo_query($sql, $_SESSION[$OJ_NAME.'_'.'user_id'],$_POST['content'],$tid,$ip)){
+					if(isset($_REQUEST['cid'])){
+						$cid=intval($_REQUEST['cid']);
+						header('Location: thread.php?cid='.$cid.'&tid='.$tid);
+					}else{
+						header('Location: thread.php?tid='.$tid);
+					}
+					exit(0);
+				}else{
+					echo('Unable to post.');
+				}
+			}else{
+				echo "reply non-exists topic";
+			}
                 } else echo('Error!');
         }
         require_once("../oj-footer.php");

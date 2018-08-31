@@ -6,7 +6,7 @@
 </head>
 <body>
 <div id="wrapper">
-	<?php require_once("oj-header.php");?>
+	<?php require_once("template/bs/oj-header.php");?>
 <div id=main>
 	<center>
 		<h3>current online user: <?php echo $on->get_num()?></h3>
@@ -33,7 +33,7 @@
 				}
 		endforeach;
 		
-		if(isset($_SESSION['administrator'])){
+		if(isset($_SESSION[$OJ_NAME.'_'.'administrator'])){
 		
 			echo "<tr><td width='100%' colspan='5'><form>IP<input type='text' name='search'><input type='submit' value='$MSG_SEARCH' ></form></td></tr>";
 	  
@@ -69,7 +69,7 @@
 		</table>
 		</center>
 <div id=foot>
-	<?php require_once("oj-footer.php");?>
+	<?php require_once("template/bs/oj-footer.php");?>
 
 </div><!--end foot-->
 </div><!--end main-->

@@ -1,6 +1,6 @@
 <?php
+require_once("../include/db_info.inc.php");
 function problem_exist($pid,$cid){
-	require("../include/db_info.inc.php");
 	if ($pid=='') $pid=0;
 	if ($cid!='')
 		$cid=intval($cid);
@@ -17,13 +17,12 @@ function problem_exist($pid,$cid){
 		return true;
 	$sql.=" LIMIT 1";
 	//echo $sql;
-	$result=mysql_query($sql) or print "db error";
-	return mysql_num_rows($result)>0;
+	$result=pdo_query($sql) or print "db error";
+	return count($result)>0;
 }
 function err_msg($msg){
-	require_once("oj-header.php");
-	echo $msg;
-	require_once("oj-footer.php");
-	exit(0);
+        $view_errors= "$msg";
+        require("template/".$OJ_TEMPLATE."/error.php");
+        exit(0);
 }
 ?>

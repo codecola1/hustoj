@@ -6,7 +6,7 @@
 </head>
 <body>
 <div id="wrapper">
-	<?php require_once("oj-header.php");?>
+	<?php require_once("template/bs/oj-header.php");?>
 <div id=main>
 	
 <link href='highlight/styles/shCore.css' rel='stylesheet' type='text/css'/> 
@@ -31,7 +31,7 @@ SyntaxHighlighter.all();
 </script>
 
 <!-- Requires jQuery -->
-  <script language="javascript" type="text/javascript" src="include/jquery-latest.js"></script>
+  
 
 	  
 	<!-- Requires CodeMirror 2.16 -->
@@ -72,7 +72,7 @@ SyntaxHighlighter.all();
 
 
 <div id=foot>
-	<?php require_once("oj-footer.php");?>
+	<?php require_once("template/bs/oj-footer.php");?>
 
 </div><!--end foot-->
 </div><!--end main-->

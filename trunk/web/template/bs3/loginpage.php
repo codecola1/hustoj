@@ -26,28 +26,34 @@
       <!-- Main component for a primary marketing message or call to action -->
       <div class="jumbotron">
 
-<form action="login.php" method="post" role="form" class="form-horizontal">
+<form id="login" action="login.php" method="post" role="form" class="form-horizontal" onSubmit="return jsMd5();"  >
 	<div class="form-group">
-	<label class="col-sm-4 control-label"><?php echo $MSG_USER_ID?></label><div class="col-sm-8"><input name="user_id" class="form-control" placeholder="<?php echo $MSG_USER_ID?>" type="text"></div>						</div>
+	<label class="col-sm-4 control-label"><?php echo $MSG_USER_ID?></label><div class="col-sm-4"><input name="user_id" class="form-control" placeholder="<?php echo $MSG_USER_ID?>" type="text"></div>						</div>
 	<div class="form-group">
-	<label class="col-sm-4 control-label"><?php echo $MSG_PASSWORD?></label><div class="col-sm-8"><input name="password" class="form-control" placeholder="<?php echo $MSG_PASSWORD?>" type="password"></div>						</div>
+	<label class="col-sm-4 control-label"><?php echo $MSG_PASSWORD?></label><div class="col-sm-4"><input name="password" class="form-control" placeholder="<?php echo $MSG_PASSWORD?>" type="password"></div>						</div>
 <?php if($OJ_VCODE){?>
 
 	<div class="form-group">
-	<label class="col-sm-4 control-label"><?php echo $MSG_VCODE?></label><div class="col-sm-4"><input name="vcode" class="form-control" type="text"></div><div class="col-sm-4"><img alt="click to change" src="vcode.php" onclick="this.src='vcode.php?'+Math.random()" height="30px">*</div>						</div>
+	<label class="col-sm-4 control-label"><?php echo $MSG_VCODE?></label><div class="col-sm-3"><input name="vcode" class="form-control" type="text"></div><div class="col-sm-4"><img alt="click to change" src="vcode.php" onclick="this.src='vcode.php?'+Math.random()" height="30px">*</div>						</div>
 <?php }?>
 	<div class="form-group">
-	<div class="col-sm-offset-4 col-sm-4">
-	<button name="submit" type="submit" class="btn btn-default btn-block">Submit</button>
+	<div class="col-sm-offset-4 col-sm-2">
+	<button name="submit" type="submit" class="btn btn-default btn-block" ><?php echo $MSG_LOGIN; ?></button>
 	</div>
-	<div class="col-sm-4">
-	<a class="btn btn-default btn-block" href="lostpassword.php">Lost Password</a>
+	<div class="col-sm-2">
+	<a class="btn btn-default btn-block" href="lostpassword.php"><?php echo $MSG_LOST_PASSWORD; ?></a>
 	</div>
 	</div>
 </form>					
       </div>
-
-
+	<script src="include/md5-min.js"></script>
+	<script>
+		function jsMd5(){
+			if($("input[name=password]").val()=="") return false;
+			$("input[name=password]").val(hex_md5($("input[name=password]").val()));
+			return true;
+		}
+	</script>
     </div> <!-- /container -->
 
 

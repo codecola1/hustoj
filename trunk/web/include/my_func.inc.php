@@ -1,4 +1,33 @@
 <?php
+function crypto_rand_secure($min, $max) {
+        $range = $max - $min;
+        if ($range < 0) return $min; // not so random...
+        $log = log($range, 2);
+        $bytes = (int) ($log / 8) + 1; // length in bytes
+        $bits = (int) $log + 1; // length in bits
+        $filter = (int) (1 << $bits) - 1; // set all lower bits to 1
+        do {
+			if(function_exists("openssl_random_pseudo_bytes")){
+				$rnd = hexdec(bin2hex(openssl_random_pseudo_bytes($bytes)));
+			}else{
+				$rnd = hexdec(bin2hex(rand()."_".rand()));
+			}
+            $rnd = $rnd & $filter; // discard irrelevant bits
+        } while ($rnd >= $range);
+        return $min + $rnd;
+}
+
+function getToken($length=32){
+    $token = "";
+    $codeAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    $codeAlphabet.= "abcdefghijklmnopqrstuvwxyz";
+    $codeAlphabet.= "0123456789";
+    for($i=0;$i<$length;$i++){
+        $token .= $codeAlphabet[crypto_rand_secure(0,strlen($codeAlphabet))];
+    }
+    return $token;
+}
+
 function pwGen($password,$md5ed=False) 
 {
 	if (!$md5ed) $password=md5($password);
@@ -11,19 +40,22 @@ function pwGen($password,$md5ed=False)
 function pwCheck($password,$saved)
 {
 	if (isOldPW($saved)){
-		$mpw = md5($password);
+		if(!isOldPW($password)) $mpw = md5($password);
+		else $mpw=$password;
 		if ($mpw==$saved) return True;
 		else return False;
 	}
 	$svd=base64_decode($saved);
 	$salt=substr($svd,20);
-	$hash = base64_encode( sha1(md5($password) . $salt, true) . $salt );
+	if(!isOldPW($password)) $password=md5($password);
+	$hash = base64_encode( sha1(($password) . $salt, true) . $salt );
 	if (strcmp($hash,$saved)==0) return True;
 	else return False;
 }
 
 function isOldPW($password)
 {
+	if(strlen($password)!=32) return false;
 	for ($i=strlen($password)-1;$i>=0;$i--)
 	{
 		$c = $password[$i];
@@ -53,31 +85,28 @@ function is_valid_user_name($user_name){
 function sec2str($sec){
 	return sprintf("%02d:%02d:%02d",$sec/3600,$sec%3600/60,$sec%60);
 }
-
 function is_running($cid){
-	require_once("./include/db_info.inc.php");
    $now=strftime("%Y-%m-%d %H:%M",time());
-	$sql="SELECT count(*) FROM `contest` WHERE `contest_id`='$cid' AND `end_time`>'$now'";
-	$result=mysql_query($sql);
-	$row=mysql_fetch_array($result);
+	$sql="SELECT count(*) FROM `contest` WHERE `contest_id`=? AND `end_time`>?";
+	$result=pdo_query($sql,$cid,$now);
+	$row=$result[0];
 	$cnt=intval($row[0]);
-	mysql_free_result($result);
 	return $cnt>0;
 }
-
 function check_ac($cid,$pid){
-	require_once("./include/db_info.inc.php");
-	$sql="SELECT count(*) FROM `solution` WHERE `contest_id`='$cid' AND `num`='$pid' AND `result`='4' AND `user_id`='".$_SESSION['user_id']."'";
-	$result=mysql_query($sql);
-	$row=mysql_fetch_array($result);
+	//require_once("./include/db_info.inc.php");
+	global $OJ_NAME;
+	
+	$sql="SELECT count(*) FROM `solution` WHERE `contest_id`=? AND `num`=? AND `result`='4' AND `user_id`=?";
+	$result=pdo_query($sql,$cid,$pid,$_SESSION[$OJ_NAME.'_'.'user_id']);
+	 $row=$result[0];
 	$ac=intval($row[0]);
-	mysql_free_result($result);
 	if ($ac>0) return "<font color=green>Y</font>";
-	$sql="SELECT count(*) FROM `solution` WHERE `contest_id`='$cid' AND `num`='$pid' AND `user_id`='".$_SESSION['user_id']."'";
-	$result=mysql_query($sql);
-	$row=mysql_fetch_array($result);
+	$sql="SELECT count(*) FROM `solution` WHERE `contest_id`=? AND `num`=? AND `result`!=4 and `problem_id`!=0  AND `user_id`=?";
+	$result=pdo_query($sql,$cid,$pid,$_SESSION[$OJ_NAME.'_'.'user_id']);
+	$row=$result[0];
 	$sub=intval($row[0]);
-	mysql_free_result($result);
+	
 	if ($sub>0) return "<font color=red>N</font>";
 	else return "";
 }
@@ -106,8 +135,8 @@ function RemoveXSS($val) {
       $val = preg_replace('/(&#0{0,8}'.ord($search[$i]).';?)/', $search[$i], $val); // with a ;
    }
 
-   // now the only remaining whitespace attacks are \t, \n, and \r
-   $ra1 = Array('javascript', 'vbscript', 'expression', 'applet', 'meta', 'xml', 'blink', 'link', 'style', 'script', 'embed', 'object', 'iframe', 'frame', 'frameset', 'ilayer', 'layer', 'bgsound', 'title', 'base');
+   // now the only remaining whitespace attacks are \t, \n, and \r   //, 'style'
+   $ra1 = Array('javascript', 'vbscript', 'expression', 'applet', 'meta', 'xml', 'blink', 'link', 'script', 'embed', 'object', 'iframe', 'frame', 'frameset', 'ilayer', 'layer', 'bgsound', 'title', 'base');
    $ra2 = Array('onabort', 'onactivate', 'onafterprint', 'onafterupdate', 'onbeforeactivate', 'onbeforecopy', 'onbeforecut', 'onbeforedeactivate', 'onbeforeeditfocus', 'onbeforepaste', 'onbeforeprint', 'onbeforeunload', 'onbeforeupdate', 'onblur', 'onbounce', 'oncellchange', 'onchange', 'onclick', 'oncontextmenu', 'oncontrolselect', 'oncopy', 'oncut', 'ondataavailable', 'ondatasetchanged', 'ondatasetcomplete', 'ondblclick', 'ondeactivate', 'ondrag', 'ondragend', 'ondragenter', 'ondragleave', 'ondragover', 'ondragstart', 'ondrop', 'onerror', 'onerrorupdate', 'onfilterchange', 'onfinish', 'onfocus', 'onfocusin', 'onfocusout', 'onhelp', 'onkeydown', 'onkeypress', 'onkeyup', 'onlayoutcomplete', 'onload', 'onlosecapture', 'onmousedown', 'onmouseenter', 'onmouseleave', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'onmousewheel', 'onmove', 'onmoveend', 'onmovestart', 'onpaste', 'onpropertychange', 'onreadystatechange', 'onreset', 'onresize', 'onresizeend', 'onresizestart', 'onrowenter', 'onrowexit', 'onrowsdelete', 'onrowsinserted', 'onscroll', 'onselect', 'onselectionchange', 'onselectstart', 'onstart', 'onstop', 'onsubmit', 'onunload');
    $ra = array_merge($ra1, $ra2);
 

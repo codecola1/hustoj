@@ -14,7 +14,7 @@ $("#cs").tablesorter();
 );
 </script>
 
-<script language="javascript" type="text/javascript" src="include/jquery-latest.js"></script>
+
 <script language="javascript" type="text/javascript" src="include/jquery.flot.js"></script>
 <script type="text/javascript">
 $(function () {
@@ -91,7 +91,7 @@ echo "</tr>";
 </center>
 
 <div id=foot>
-<?php require_once("oj-footer.php");?>
+<?php require_once("template/bs/oj-footer.php");?>
 
 </div><!--end foot-->
 </div><!--end main-->

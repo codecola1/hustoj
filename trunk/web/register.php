@@ -1,5 +1,6 @@
 <?php 
 require_once("./include/db_info.inc.php");
+if(isset($OJ_REGISTER)&&!$OJ_REGISTER) exit(0);
 require_once("./include/my_func.inc.php");
 $err_str="";
 $err_cnt=0;
@@ -9,8 +10,8 @@ $len=strlen($user_id);
 $email=trim($_POST['email']);
 $school=trim($_POST['school']);
 $vcode=trim($_POST['vcode']);
-if($OJ_VCODE&&($vcode!= $_SESSION["vcode"]||$vcode==""||$vcode==null) ){
-	$_SESSION["vcode"]=null;
+if($OJ_VCODE&&($vcode!= $_SESSION[$OJ_NAME.'_'."vcode"]||$vcode==""||$vcode==null) ){
+	$_SESSION[$OJ_NAME.'_'."vcode"]=null;
 	$err_str=$err_str."Verification Code Wrong!\\n";
 	$err_cnt++;
 }
@@ -63,37 +64,45 @@ if ($err_cnt>0){
 	
 }
 $password=pwGen($_POST['password']);
-$sql="SELECT `user_id` FROM `users` WHERE `users`.`user_id` = '".$user_id."'";
-$result=mysql_query($sql);
-$rows_cnt=mysql_num_rows($result);
-mysql_free_result($result);
+$sql="SELECT `user_id` FROM `users` WHERE `users`.`user_id` = ?";
+$result=pdo_query($sql,$user_id);
+$rows_cnt=count($result);
 if ($rows_cnt == 1){
 	print "<script language='javascript'>\n";
 	print "alert('User Existed!\\n');\n";
 	print "history.go(-1);\n</script>";
 	exit(0);
 }
-$nick=mysql_real_escape_string(htmlspecialchars ($nick));
-$school=mysql_real_escape_string(htmlspecialchars ($school));
-$email=mysql_real_escape_string(htmlspecialchars ($email));
-$ip=$_SERVER['REMOTE_ADDR'];
+$nick=(htmlentities ($nick,ENT_QUOTES,"UTF-8"));
+$school=(htmlentities ($school,ENT_QUOTES,"UTF-8"));
+$email=(htmlentities ($email,ENT_QUOTES,"UTF-8"));
+$ip = ($_SERVER['REMOTE_ADDR']);
+if( !empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ){
+    $REMOTE_ADDR = $_SERVER['HTTP_X_FORWARDED_FOR'];
+    $tmp_ip=explode(',',$REMOTE_ADDR);
+    $ip =(htmlentities($tmp_ip[0],ENT_QUOTES,"UTF-8"));
+}
+if(isset($OJ_REG_NEED_CONFIRM)&&$OJ_REG_NEED_CONFIRM) $defunct="Y";
+else $defunct="N";
 $sql="INSERT INTO `users`("
-."`user_id`,`email`,`ip`,`accesstime`,`password`,`reg_time`,`nick`,`school`)"
-."VALUES('".$user_id."','".$email."','".$_SERVER['REMOTE_ADDR']."',NOW(),'".$password."',NOW(),'".$nick."','".$school."')";
-mysql_query($sql);// or die("Insert Error!\n");
-$sql="INSERT INTO `loginlog` VALUES('$user_id','$password','$ip',NOW())";
-mysql_query($sql);
-$_SESSION['user_id']=$user_id;
+."`user_id`,`email`,`ip`,`accesstime`,`password`,`reg_time`,`nick`,`school`,`defunct`)"
+."VALUES(?,?,?,NOW(),?,NOW(),?,?,?)";
+$rows=pdo_query($sql,$user_id,$email,$ip,$password,$nick,$school,$defunct);// or die("Insert Error!\n");
 
-		$sql="SELECT `rightstr` FROM `privilege` WHERE `user_id`='".$_SESSION['user_id']."'";
+$sql="INSERT INTO `loginlog` VALUES(?,?,?,NOW())";
+pdo_query($sql,$user_id,"no save",$ip);
+
+if(!isset($OJ_REG_NEED_CONFIRM)||!$OJ_REG_NEED_CONFIRM){
+		$_SESSION[$OJ_NAME.'_'.'user_id']=$user_id;
+		$sql="SELECT `rightstr` FROM `privilege` WHERE `user_id`=?";
 		//echo $sql."<br />";
-		$result=mysql_query($sql);
-		echo mysql_error();
-		while ($row=mysql_fetch_assoc($result)){
-			$_SESSION[$row['rightstr']]=true;
-			//echo $_SESSION[$row['rightstr']]."<br />";
+		$result=pdo_query($sql,$_SESSION[$OJ_NAME.'_'.'user_id']);
+		foreach ($result as $row){
+			$_SESSION[$OJ_NAME.'_'.$row['rightstr']]=true;
+			//echo $_SESSION[$OJ_NAME.'_'.$row['rightstr']]."<br />";
 		}
-		$_SESSION['ac']=Array();
-		$_SESSION['sub']=Array();
+		$_SESSION[$OJ_NAME.'_'.'ac']=Array();
+		$_SESSION[$OJ_NAME.'_'.'sub']=Array();
+}
 ?>
 <script>history.go(-2);</script>

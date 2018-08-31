@@ -2,20 +2,20 @@
 <?php
 	require_once("./include/db_info.inc.php");
 	require_once("./include/my_func.inc.php"); 
-	//Step1£º»ñÈ¡Authorization Code
+	//Step1Â£ÂºÂ»Ã±ÃˆÂ¡Authorization Code
 	session_start();
 	$code = $_REQUEST["code"];
 	if(empty($code)) 
 	{
-		 $_SESSION['state'] = md5(uniqid(rand(), TRUE));  
+		 $_SESSION[$OJ_NAME.'_'.'state'] = md5(uniqid(rand(), TRUE));  
 		 $dialog_url = "https://graph.qq.com/oauth2.0/authorize?response_type=code&client_id=" 
 			. $OJ_QQ_AKEY . "&redirect_uri=" . urlencode($OJ_QQ_CBURL) . "&state="
-			. $_SESSION['state'];
+			. $_SESSION[$OJ_NAME.'_'.'state'];
 		echo("<script> top.location.href='" . $dialog_url . "'</script>");
 	}
 
   //get Access Token
-   if($_REQUEST['state'] == $_SESSION['state']) 
+   if($_REQUEST['state'] == $_SESSION[$OJ_NAME.'_'.'state']) 
   {
      $token_url = "https://graph.qq.com/oauth2.0/token?grant_type=authorization_code&"
      . "client_id=" . $OJ_QQ_AKEY . "&redirect_uri=" . urlencode($OJ_QQ_CBURL)
@@ -69,20 +69,26 @@
      $email ="xx";
      $school = "xx"; 
      
-     $sql = "SELECT `user_id` FROM `users` where `user_id`=".$user_id;
-     $res = mysql_query($sql);
-     $row_num = mysql_num_rows($res);
+     $sql = "SELECT `user_id` FROM `users` where `user_id`=?";
+     $res = pdo_query($sql,$user_id);
+     $row_num = count($res);
      echo('row_num'.$row_num.'<br>');
      if ($row_num == 0)
      {
          $sql="INSERT INTO `users`("
          ."`user_id`,`email`,`ip`,`accesstime`,`password`,`reg_time`,`nick`,`school`)"
-         ."VALUES('".$user_id."','".$email."','".$_SERVER['REMOTE_ADDR']."',NOW(),'".$password."',NOW(),'".$nick."','".$school."')";
+         ."VALUES(?,?,?,NOW(),?,NOW(),?,?)";
          // reg it
-         mysql_query($sql);
+	 $ip = ($_SERVER['REMOTE_ADDR']);
+         if( !empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ){
+             $REMOTE_ADDR = $_SERVER['HTTP_X_FORWARDED_FOR'];
+             $tmp_ip=explode(',',$REMOTE_ADDR);
+             $ip =(htmlentities($tmp_ip[0],ENT_QUOTES,"UTF-8"));
+         }
+         pdo_query($sql,$user_id,$email,$ip,$password,$nick,$school);
      }
 	 //login it
-	 $_SESSION['user_id']=$uname;
+	 $_SESSION[$OJ_NAME.'_'.'user_id']=$user_id;
 	 // redirect it
 	 header("Location: ./"); 
   }

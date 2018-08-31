@@ -7,12 +7,18 @@
 	$view_title= "Welcome To Online Judge";
 	require_once("./include/check_post_key.php");
 	require_once("./include/my_func.inc.php");
-
-
+if(
+		(isset($OJ_EXAM_CONTEST_ID)&&$OJ_EXAM_CONTEST_ID>0)||
+		(isset($OJ_ON_SITE_CONTEST_ID)&&$OJ_ON_SITE_CONTEST_ID>0)
+   ){
+		$view_errors= $MSG_MODIFY_NOT_ALLOWED_FOR_EXAM;
+		require("template/".$OJ_TEMPLATE."/error.php");
+		exit ();
+}
 $err_str="";
 $err_cnt=0;
 $len;
-$user_id=$_SESSION['user_id'];
+$user_id=$_SESSION[$OJ_NAME.'_'.'user_id'];
 $email=trim($_POST['email']);
 $school=trim($_POST['school']);
 $nick=trim($_POST['nick']);
@@ -22,12 +28,12 @@ if ($len>100){
 	$err_cnt++;
 }else if ($len==0) $nick=$user_id;
 $password=$_POST['opassword'];
-$sql="SELECT `user_id`,`password` FROM `users` WHERE `user_id`='".$user_id."'";
-$result=mysql_query($sql);
-$row=mysql_fetch_array($result);
+$sql="SELECT `user_id`,`password` FROM `users` WHERE `user_id`=?";
+$result=pdo_query($sql,$user_id);
+ $row=$result[0];
 if ($row && pwCheck($password,$row['password'])) $rows_cnt = 1;
 else $rows_cnt = 0;
-mysql_free_result($result);
+
 if ($rows_cnt==0){
 	$err_str=$err_str."Old Password Wrong";
 	$err_cnt++;
@@ -60,18 +66,18 @@ if ($err_cnt>0){
 }
 if (strlen($_POST['npassword'])==0) $password=pwGen($_POST['opassword']);
 else $password=pwGen($_POST['npassword']);
-$nick=mysql_real_escape_string(htmlspecialchars ($nick));
-$school=mysql_real_escape_string(htmlspecialchars ($school));
-$email=mysql_real_escape_string(htmlspecialchars ($email));
+$nick=htmlentities ($nick,ENT_QUOTES,"UTF-8");
+$school=(htmlentities ($school,ENT_QUOTES,"UTF-8"));
+$email=(htmlentities ($email,ENT_QUOTES,"UTF-8"));
 $sql="UPDATE `users` SET"
-."`password`='".($password)."',"
-."`nick`='".($nick)."',"
-."`school`='".($school)."',"
-."`email`='".($email)."' "
-."WHERE `user_id`='".mysql_real_escape_string($user_id)."'"
+."`password`=?,"
+."`nick`=?,"
+."`school`=?,"
+."`email`=?"
+."WHERE `user_id`=?"
 ;
 //echo $sql;
 //exit(0);
-mysql_query($sql);// or die("Insert Error!\n");
+pdo_query($sql,$password,$nick,$school,$email,$user_id);
 header("Location: ./");
 ?>

@@ -6,7 +6,7 @@
 </head>
 <body>
 <div id="wrapper">
-	<?php require_once("oj-header.php");?>
+	<?php require_once("template/bs/oj-header.php");?>
 <div id=main>
 	
 <link href='highlight/styles/shCore.css' rel='stylesheet' type='text/css'/> 
@@ -32,7 +32,7 @@ SyntaxHighlighter.all();
 <?php
 
    if ($ok==true){
-		if($view_user_id!=$_SESSION['user_id'])
+		if($view_user_id!=$_SESSION[$OJ_NAME.'_'.'user_id'])
 			echo "<a href='mail.php?to_user=$view_user_id&title=$MSG_SUBMIT $id'>Mail the auther</a>";
 		$brush=strtolower($language_name[$slanguage]);
 		if ($brush=='pascal') $brush='delphi';
@@ -51,7 +51,7 @@ SyntaxHighlighter.all();
 		$auth=ob_get_contents();
 		ob_end_clean();
 
-		echo htmlspecialchars(str_replace("\n\r","\n",$view_source))."\n".$auth."</pre>";
+		echo htmlentities(str_replace("\n\r","\n",$view_source),ENT_QUOTES,"UTF-8")."\n".$auth."</pre>";
 		
 	}else{
 		
@@ -60,7 +60,7 @@ SyntaxHighlighter.all();
 ?>
 </div><!--end main-->
 <div id=foot>
-	<?php require_once("oj-footer.php");?>
+	<?php require_once("template/bs/oj-footer.php");?>
 </div><!--end foot-->
 
 </div><!--end wrapper-->

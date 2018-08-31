@@ -72,7 +72,7 @@ for ($i=0;$i<$user_cnt;$i++){
         echo "*";
       
 	$usolved=$U[$i]->solved;
-  if($uuid==$_GET['user_id']) echo "<td bgcolor=#ffff77>";
+  if(isset($_GET['user_id'])&&$uuid==$_GET['user_id']) echo "<td bgcolor=#ffff77>";
   else echo"<td>";
 	echo "<a name=\"$uuid\" href=userinfo.php?user=$uuid>$uuid</a>";
 	 echo "<td><a href=userinfo.php?user=$uuid>".htmlentities($U[$i]->nick,ENT_QUOTES,"UTF-8")."</a>";
@@ -170,7 +170,7 @@ metal();
 </script>
 
 <div id=foot>
-	<?php require_once("oj-footer.php");?>
+	<?php require_once("template/bs/oj-footer.php");?>
 
 </div><!--end foot-->
 </div><!--end main-->

@@ -1,6 +1,5 @@
 <?php
-ini_set("display_errors","On");
-		ob_start();
+ini_set("display_errors","Off");
 		header ( "content-type:   application/excel" );
 		
 ?>
@@ -8,7 +7,7 @@ ini_set("display_errors","On");
 global $mark_base,$mark_per_problem,$mark_per_punish;
  $mark_start=60;
  $mark_end=100;
- $mark_sigma=10;
+ $mark_sigma=5;
 if(isset($OJ_LANG)){
 		require_once("./lang/$OJ_LANG.php");
 }
@@ -33,12 +32,14 @@ class TM{
 	
 		if (isset($this->p_ac_sec[$pid])&&$this->p_ac_sec[$pid]>0)
 			return;
-		if ($res!=4) 
-			if(isset($this->p_wa_num[$pid]))
+		if ($res!=4){
+			if(isset($OJ_CE_PENALTY)&&!$OJ_CE_PENALTY&&$res==11) return;  // ACM WF punish no ce 
+			if(isset($this->p_wa_num[$pid])){
 				$this->p_wa_num[$pid]++;
-			else
+			}else{
 				$this->p_wa_num[$pid]=1;
-		else{
+			}
+		}else{
 			$this->p_ac_sec[$pid]=$sec;
 			$this->solved++;
 			$this->time+=$sec+$this->p_wa_num[$pid]*1200;
@@ -85,7 +86,7 @@ function  getMark($users,  $start,  $end, $s) {
 		for ( $i = $end; $i > $start; $i--) {
 			
 		    $prob = $cn
-					* normalDistribution($i, ($start + $end) / 2, ($end - $start)
+					* normalDistribution($i, ($start + $end) / 2+10, ($end - $start)
 							/ $s);
 			$accum += $prob;
 			
@@ -98,7 +99,7 @@ function  getMark($users,  $start,  $end, $s) {
 	
 		for ($i = $end; $i > $start; $i--) {
 			$prob = $cn
-					* normalDistribution($i, ($start + $end) / 2, ($end - $start)
+					* normalDistribution($i, ($start + $end) / 2+10, ($end - $start)
 							/ $s);
 			$accum += $prob;
 			while ($accum > $p/2) {
@@ -122,20 +123,18 @@ function  getMark($users,  $start,  $end, $s) {
 if (!isset($_GET['cid'])) die("No Such Contest!");
 $cid=intval($_GET['cid']);
 //require_once("contest-header.php");
-$sql="SELECT `start_time`,`title` FROM `contest` WHERE `contest_id`='$cid'";
-$result=mysql_query($sql) or die(mysql_error());
-$rows_cnt=mysql_num_rows($result);
+$sql="SELECT `start_time`,`title` FROM `contest` WHERE `contest_id`=?";
+$result=pdo_query($sql,$cid) ;
+$rows_cnt=count($result);
 $start_time=0;
 if ($rows_cnt>0){
-	$row=mysql_fetch_array($result);
+	 $row=$result[0];
 	$start_time=strtotime($row[0]);
 	$title=$row[1];
-	if(strpos($_SERVER['HTTP_USER_AGENT'],'MSIE')){
-		$title=iconv("utf8","gbk",$title);
-	}
-	header ( "content-disposition:   attachment;   filename=contest".$cid."_".$title.".xls" );
+	$ftitle=rawurlencode($title);
+	header ( "content-disposition:   attachment;   filename=contest".$cid."_".$ftitle.".xls" );
 }
-mysql_free_result($result);
+
 if ($start_time==0){
 	echo "No Such Contest";
 	//require_once("oj-footer.php");
@@ -148,9 +147,9 @@ if ($start_time>time()){
 	exit(0);
 }
 
-$sql="SELECT count(1) FROM `contest_problem` WHERE `contest_id`='$cid'";
-$result=mysql_query($sql);
-$row=mysql_fetch_array($result);
+$sql="SELECT count(1) FROM `contest_problem` WHERE `contest_id`=?";
+$result=pdo_query($sql,$cid);
+ $row=$result[0];
 $pid_cnt=intval($row[0]);
 if($pid_cnt==1) {
 	$mark_base=100;
@@ -159,33 +158,37 @@ if($pid_cnt==1) {
 	$mark_per_problem=(100-$mark_base)/($pid_cnt-1);
 }
 $mark_per_punish=$mark_per_problem/5;
-mysql_free_result($result);
+
 
 $sql="SELECT 
 	users.user_id,users.nick,solution.result,solution.num,solution.in_date 
 		FROM 
-			(select * from solution where solution.contest_id='$cid' and num>=0) solution 
+			(select * from solution where solution.contest_id=? and num>=0 and problem_id>0) solution 
 		left join users 
 		on users.user_id=solution.user_id 
 	ORDER BY users.user_id,in_date";
 //echo $sql;
-$result=mysql_query($sql);
+$result=pdo_query($sql,$cid);
 $user_cnt=0;
 $user_name='';
 $U=array();
-while ($row=mysql_fetch_object($result)){
-	$n_user=$row->user_id;
+ foreach($result as $row){
+	$n_user=$row['user_id'];
 	if (strcmp($user_name,$n_user)){
 		$user_cnt++;
 		$U[$user_cnt]=new TM();
-		$U[$user_cnt]->user_id=$row->user_id;
-                $U[$user_cnt]->nick=$row->nick;
+		$U[$user_cnt]->user_id=$row['user_id'];
+                $U[$user_cnt]->nick=$row['nick'];
 
 		$user_name=$n_user;
 	}
-	$U[$user_cnt]->Add($row->num,strtotime($row->in_date)-$start_time,intval($row->result),$mark_base,$mark_per_problem,$mark_per_punish);
+
+        if(time()<$end_time+3600&&$lock<strtotime($row['in_date']))
+		  $U[$user_cnt]->Add($row['num'],strtotime($row['in_date'])-$start_time,0,$mark_base,$mark_per_problem,$mark_per_punish);
+        else
+		  $U[$user_cnt]->Add($row['num'],strtotime($row['in_date'])-$start_time,intval($row['result']),$mark_base,$mark_per_problem,$mark_per_punish);
 }
-mysql_free_result($result);
+
 usort($U,"s_cmp");
 $rank=1;
 //echo "<style> td{font-size:14} </style>";
@@ -209,12 +212,13 @@ for ($i=0;$i<$user_cnt;$i++){
 	if(strpos($_SERVER['HTTP_USER_AGENT'],'MSIE')){
 		$U[$i]->nick=iconv("utf8","gbk",$U[$i]->nick);
 	}
-	echo "<td>".$U[$i]->nick."";
-	echo "<td>$usolved";
+	echo "<td>".$U[$i]->nick."</td>";
+	echo "<td>$usolved</td>";
 	echo "<td>";
-	
+        if($usolved==0) $U[$i]->mark=0;	
 	
 	echo $U[$i]->mark>0?intval($U[$i]->mark):0;
+	echo "</td>";
 	for ($j=0;$j<$pid_cnt;$j++){
 		echo "<td>";
 		if(isset($U[$i])){
@@ -223,6 +227,7 @@ for ($i=0;$i<$user_cnt;$i++){
 			if (isset($U[$i]->p_wa_num[$j])&&$U[$i]->p_wa_num[$j]>0) 
 				echo "(-".$U[$i]->p_wa_num[$j].")";
 		}
+		echo "</td>";
 	}
 	echo "</tr>";
 }
